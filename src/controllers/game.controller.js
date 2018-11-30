@@ -13,7 +13,7 @@ module.exports = {
 	getById(req, res, next) {
 		const id = req.params.id;
 		
-		if (id < 0 || id > games.length) {
+		if (id < 0 || id >= games.length) {
 			next(new ApiError('ID not found', 404));
 		}
 		else {

@@ -1,0 +1,11 @@
+# 'ignore' de volgende folders en bestanden:
+
+node_modules
+.idea
+.sonar/
+coverage/
+package-lock.json
+static
+resources
+
+*.code-workspace

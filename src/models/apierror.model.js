@@ -1,6 +1,6 @@
 class ApiError {
 
-	cosntructor(msg, code) {
+	constructor(msg, code) {
 		this.msg = msg;
 		this.code = code;
 		this.date = new Date()

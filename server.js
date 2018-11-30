@@ -3,13 +3,14 @@ const express = require('express');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const gameRouters = require('./src/routers/game.routers');
+const ApiError = require('./src/models/apierror.model');
 
 var app = express();
 
 app.use(morgan('dev'));
 app.use(bodyParser.json());
 
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.use('/api', gameRouters);
 
@@ -18,6 +19,7 @@ app.use('*', (req, res, next) => {
 });
 
 app.use('*', (err, req, res, next) => {
+	console.dir(err);
 	res.status(err.code).json({error: err}).end()
 })
 
