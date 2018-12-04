@@ -3,84 +3,96 @@ const Game = require('../models/game.model');
 const ApiError = require('../models/apierror.model');
 const Pool = require('../config/db');
 
-let games = [
-	new Game(0, 'Battlefield V', 'EA', 2018, 'FPS')
-]
-
 module.exports = {
 	getAll(req, res, next) {
 		
 		Pool.query('SELECT * FROM games', function (err, rows, fields) {
 			if (err) {
-				next(new ApiError(err, 500));
+				return next(new ApiError(err, 500));
 			}
 			
 			res.status(200).json({ result: rows }).end();
 		});
 	},
 	getById(req, res, next) {
-		const id = req.params.id;
-		
-		if (id < 0 || id >= games.length) {
-			next(new ApiError('ID not found', 404));
-		}
-		else {
-			res.status(200).json(
-				games[id]
-			).end()
-		}
-	},
-	addGame(req, res) {
-		let game = req.body;
-		const gameId = games[games.length - 1].id + 1;
-		
-		const newGame = new Game(gameId, game.name, game.producer, game.release_year, game.type);
+		const id = req.params.id; 
 
-		games.push(newGame);
+		Pool.execute('SELECT * FROM games WHERE ID = ?',
+			[id],
+			function (err, results, fields) {
+				console.dir(results);
 
-		res.status(200).json({
-			status: '200',
-			message: req.body.name+' added to the list'
-		}).end()
-	},
-	updateGame(req, res) {
-		const id = req.params.id;
-		let gameIndex;
-		let game = req.body;
+				if (err) {
+					return next(new ApiError(err, 500));
+				}
+				if (results.length < 1) {
+					return next(new ApiError(`No game found with id ${id}`, 500));
+				}
 
-		const newGame = new Game(parseInt(id), game.name, game.producer, game.release_year, game.type);
-
-		//find the array index of object
-		for (let x = 0; x < games.length; x += 1){
-			if (games[x].id == id) {
-				gameIndex = x;
+				res.status(200).json({ result: results }).end();
 			}
-		}
+		);
+	},
+	addGame(req, res, next) {
+		let game = req.body;
+		
+		const newGame = new Game(game.name, game.producer, game.release_year, game.type);
 
-		games[gameIndex] = newGame;
+		Pool.execute("INSERT INTO games (title, producer, year, type)VALUES(?,?,?,?)",
+			[newGame.name, newGame.producer, newGame.release_year, newGame.type],
+			function (err, results, fields) {
+				console.dir(results);
+				
+				if (err) {
+					return next(new ApiError(err, 500));
+				}
+				if (results.affectedRows < 1) {
+					return next(new ApiError(`Row was not inserted, contact the developer for further information`, 500));
+				}
 
-		res.status(200).json({
-			status: 200,
-			message: req.params.id+' updated'
-		}).end();
+				res.status(200).json({ result: results.affectedRows + ' row(s) succesfully inserted' }).end();
+			}
+		);
+	},
+	updateGame(req, res, next) {
+		const id = req.params.id;
+		let game = req.body;
+
+		const newGame = new Game(game.name, game.producer, game.release_year, game.type);
+
+		Pool.execute("UPDATE games SET title=?, producer=?, year=?, type=? WHERE id = ?",
+			[newGame.name, newGame.producer, newGame.release_year, newGame.type, id],
+			function (err, results, fields) {
+				console.dir(results);
+				
+				if (err) {
+					return next(new ApiError(err, 500));
+				}
+				if (results.changedRows < 1) {
+					return next(new ApiError(`There were no changes`, 500));
+				}
+
+				res.status(200).json({ result: results.changedRows + ' row(s) succesfully updated' }).end();
+			}
+		);
 	},
 	deleteGame(req, res) {
 		const id = req.params.id;
 
-		let gameIndex;
+		Pool.execute("DELETE FROM games WHERE id = ?",
+			[id],
+			function (err, results, fields) {
+				console.dir(results);
+				
+				if (err) {
+					return next(new ApiError(err, 500));
+				}
+				if (results.affectedRows < 1) {
+					return next(new ApiError(`There were no changes`, 500));
+				}
 
-		//find the array index of object
-		for (let x = 0; x < games.length; x += 1){
-			if (games[x].id == id) {
-				gameIndex = x;
+				res.status(200).json({ result: results.affectedRows + ' row(s) succesfully updated' }).end();
 			}
-		}
-
-		games.splice(gameIndex, 1);
-
-		res.status(200).json({
-			status: 200,
-			message: 'succesfully deleted game '+req.params.id
-		}).end();
+		);
 	}
 }

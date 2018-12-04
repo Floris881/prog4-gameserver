@@ -1,7 +1,6 @@
 class Game{
 
-	constructor(id, name, producer, release_year, type) {
-		this.id = id;
+	constructor(name, producer, release_year, type) {
 		this.name = name;
 		this.producer = producer;
 		this.release_year = release_year;
