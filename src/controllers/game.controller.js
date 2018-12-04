@@ -1,14 +1,22 @@
 
 const Game = require('../models/game.model');
 const ApiError = require('../models/apierror.model');
+const Pool = require('../config/db');
 
 let games = [
 	new Game(0, 'Battlefield V', 'EA', 2018, 'FPS')
 ]
 
 module.exports = {
-	getAll(req, res) {
-		res.status(200).json(games).end();
+	getAll(req, res, next) {
+		
+		Pool.query('SELECT * FROM games', function (err, rows, fields) {
+			if (err) {
+				next(new ApiError(err, 500));
+			}
+			
+			res.status(200).json({ result: rows }).end();
+		});
 	},
 	getById(req, res, next) {
 		const id = req.params.id;
